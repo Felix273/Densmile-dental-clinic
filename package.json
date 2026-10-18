@@ -1,0 +1,12 @@
+{
+  "name": "densmile-dental-clinic",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n cms,site -c blue,green \"npm --prefix cms run dev -- -p 3001\" \"npm --prefix website run dev\"",
+    "build": "npm --prefix cms run build && npm --prefix website run build",
+    "install:all": "npm --prefix cms install && npm --prefix website install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
