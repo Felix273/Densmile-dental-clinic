@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { queryOne, execute, getDb } from "./db";
-import { createSession, destroySession, requireSession } from "./auth";
+import { createSession, destroySession, requireSession, createPasswordResetToken, verifyPasswordResetToken } from "./auth";
+import { sendPasswordResetEmail } from "./mail";
 import { APPOINTMENT_STATUSES, SETTINGS_FIELDS, getResource } from "./resources";
 
 const attempts = new Map<string, { n: number; t: number }>();
@@ -137,4 +138,43 @@ export async function deleteAppointment(id: number) {
   await requireSession();
   await execute("DELETE FROM appointments WHERE id = ?", [id]);
   revalidatePath("/admin/appointments");
+}
+
+export async function requestPasswordReset(_: string | null, form: FormData): Promise<string | null> {
+  const email = String(form.get("email") ?? "").trim().toLowerCase();
+  if (!email) return "Please enter your email address.";
+
+  const user = await queryOne<{ id: number }>("SELECT id FROM users WHERE lower(email) = ?", [email]);
+
+  if (user) {
+    const token = await createPasswordResetToken(email);
+    const origin = process.env.APP_URL || "https://densmile-cms-kohl.vercel.app";
+    const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(token)}`;
+    try {
+      await sendPasswordResetEmail(email, resetUrl);
+    } catch (err) {
+      console.error("Failed to dispatch reset email:", err);
+      return "Could not send reset email. Please try again.";
+    }
+  }
+
+  return "If that account exists, a password reset link has been dispatched to your email.";
+}
+
+export async function completePasswordReset(_: string | null, form: FormData): Promise<string | null> {
+  const token = String(form.get("token") ?? "").trim();
+  const password = String(form.get("password") ?? "");
+  const confirm = String(form.get("confirm_password") ?? "");
+
+  if (!token) return "Invalid or missing reset token.";
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (password !== confirm) return "Passwords do not match.";
+
+  const email = await verifyPasswordResetToken(token);
+  if (!email) return "This reset link is invalid or has expired. Please request a new one.";
+
+  const hash = bcrypt.hashSync(password, 12);
+  await execute("UPDATE users SET password_hash = ? WHERE lower(email) = ?", [hash, email]);
+
+  redirect("/login?reset=success");
 }

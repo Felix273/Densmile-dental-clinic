@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { execute } from "@/lib/db";
+import { sendAppointmentAlert } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
@@ -35,9 +36,20 @@ export async function POST(req: Request) {
   if (!parsed.success) return Response.json({ error: "Please check the form and try again." }, { status: 400, headers });
 
   const d = parsed.data;
+
+  // 1. Save to Turso database
   await execute(
     "INSERT INTO appointments (name,phone,email,service,preferred_date,message) VALUES (?,?,?,?,?,?)",
     [d.name, d.phone, d.email, d.service, d.preferred_date, d.message]
   );
+
+  // 2. Dispatch email notification to roysambu@densmiledentalclinic.co.ke
+  try {
+    await sendAppointmentAlert(d);
+  } catch (mailErr) {
+    console.error("Could not send email alert:", mailErr);
+    // Continue responding with ok so patient booking does not fail if mail times out
+  }
+
   return Response.json({ ok: true }, { status: 201, headers });
 }

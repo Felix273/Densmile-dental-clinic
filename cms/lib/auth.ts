@@ -42,3 +42,20 @@ export async function requireSession() {
   if (!s) throw new Error("Unauthorized");
   return s;
 }
+
+export async function createPasswordResetToken(email: string): Promise<string> {
+  return await new SignJWT({ email, purpose: "reset_password" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("1h")
+    .sign(secret());
+}
+
+export async function verifyPasswordResetToken(token: string): Promise<string | null> {
+  try {
+    const { payload } = await jwtVerify(token, secret());
+    if (payload.purpose !== "reset_password" || !payload.email) return null;
+    return String(payload.email);
+  } catch {
+    return null;
+  }
+}
