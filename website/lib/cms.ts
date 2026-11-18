@@ -78,7 +78,7 @@ export interface Content {
   branches: Branch[];
 }
 
-export const CMS_URL = process.env.CMS_URL || "https://densmile-cms.vercel.app";
+export const CMS_URL = process.env.CMS_URL || "https://densmile-cms-kohl.vercel.app";
 
 const DEFAULT_CONTENT: Content = {
   settings: {
@@ -324,7 +324,7 @@ export async function getContent(): Promise<Content> {
   try {
     const res = await fetch(`${CMS_URL}/api/public/content`, {
       
-      cache: "no-store",
+      
     });
     if (!res.ok) {
       console.warn(`CMS responded ${res.status}, using default content`);

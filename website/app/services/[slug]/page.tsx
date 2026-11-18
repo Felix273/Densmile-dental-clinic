@@ -1,3 +1,11 @@
+
+export async function generateStaticParams() {
+  const content = await getContent();
+  return (content.services || []).map((s) => ({
+    slug: s.slug,
+  }));
+}
+
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
