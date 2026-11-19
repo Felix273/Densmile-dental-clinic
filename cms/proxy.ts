@@ -1,15 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const FALLBACK_SECRET = "densmile_super_secret_session_jwt_key_2026_xyz!";
-
 export async function proxy(req: NextRequest) {
   const token = req.cookies.get("cms_session")?.value;
   let ok = false;
 
-  if (token) {
+  const secret = process.env.SESSION_SECRET;
+
+  if (token && secret) {
     try {
-      const secret = process.env.SESSION_SECRET || FALLBACK_SECRET;
       await jwtVerify(token, new TextEncoder().encode(secret));
       ok = true;
     } catch (err) {

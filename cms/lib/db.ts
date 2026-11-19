@@ -2,14 +2,18 @@ import { createClient, Client } from "@libsql/client";
 
 const globalForDb = globalThis as unknown as { __db?: Client };
 
-const TURSO_URL = process.env.TURSO_DATABASE_URL || "libsql://densmile-db-felix273.aws-us-west-2.turso.io";
-const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTIzMjg1NzgsImlkIjoiMDFhMTRmMWItMjIwMS03ZjI0LWIxM2UtZDM5YTA4OThiZGEyIiwia2lkIjoibnhYTlFWNFdFNFVqdERuTFF0WTh2TjdBcWRhLW5waEktdkNRU2c1M25aYyIsInJpZCI6IjcxOTliM2RmLWQzZDctNDI1NS04MDI2LWIxNTI1MWM0ZWEyOSJ9.ALVM3qwW0CaltNb-c_26zBdlEjZNfALsLUjffd_-zN6wKJOM8mZiu5aXYN11N6yVdtW5d5WcK9YkjN6ZTlHtAg";
-
 export function getDb(): Client {
   if (!globalForDb.__db) {
+    const url = process.env.TURSO_DATABASE_URL;
+    const authToken = process.env.TURSO_AUTH_TOKEN;
+
+    if (!url || !authToken) {
+      throw new Error("Missing TURSO_DATABASE_URL or TURSO_AUTH_TOKEN environment variables.");
+    }
+
     globalForDb.__db = createClient({
-      url: TURSO_URL,
-      authToken: TURSO_TOKEN,
+      url,
+      authToken,
     });
   }
   return globalForDb.__db;
