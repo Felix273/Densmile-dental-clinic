@@ -148,7 +148,7 @@ export async function requestPasswordReset(_: string | null, form: FormData): Pr
 
   if (user) {
     const token = await createPasswordResetToken(email);
-    const origin = process.env.APP_URL || "https://densmile-cms-kohl.vercel.app";
+    const origin = process.env.APP_URL || "https://densmile-cms.netlify.app";
     const resetUrl = `${origin}/reset-password?token=${encodeURIComponent(token)}`;
     try {
       await sendPasswordResetEmail(email, resetUrl);

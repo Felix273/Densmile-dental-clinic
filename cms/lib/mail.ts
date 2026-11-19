@@ -72,7 +72,7 @@ export async function sendAppointmentAlert(data: {
         </table>
 
         <div style="text-align: center; margin-top: 24px;">
-          <a href="https://densmile-cms-kohl.vercel.app/admin/appointments" style="background: #9e0066; color: #ffffff; padding: 12px 24px; border-radius: 9999px; text-decoration: none; font-weight: bold; display: inline-block;">
+          <a href="https://densmile-cms.netlify.app/admin/appointments" style="background: #9e0066; color: #ffffff; padding: 12px 24px; border-radius: 9999px; text-decoration: none; font-weight: bold; display: inline-block;">
             Manage in Clinical Portal
           </a>
         </div>
