@@ -1,6 +1,9 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getContent } from "@/lib/cms";
+import { getContent, type Content } from "@/lib/cms";
 import {
   DentalServiceIcon,
   Sparkles,
@@ -9,7 +12,6 @@ import {
   CheckCircle2,
   ArrowRight,
   Phone,
-  MapPin,
   Calendar,
   Zap,
   Clock,
@@ -18,20 +20,39 @@ import {
   ChevronDown,
   Building2,
   Award,
+  MapPin,
 } from "@/components/icons";
 
-export default async function Home() {
-  const { settings: s, services, team, testimonials, faqs, partners, gallery, pillars, branches } = await getContent();
+const CMS_API = "https://densmile-cms.netlify.app/api/public/content";
 
-  const phoneClean = (s.phone || "+254 712 345 678").replace(/\s/g, "");
+export default function Home() {
+  const [content, setContent] = useState<Content | null>(null);
 
-  const getPillarIcon = (iconKey?: string) => {
-    const k = (iconKey || "").toLowerCase();
-    if (k.includes("micro") || k.includes("3d")) return <Microscope size={26} />;
-    if (k.includes("shield") || k.includes("insur")) return <ShieldCheck size={26} />;
-    if (k.includes("heart") || k.includes("steril")) return <HeartHandshake size={26} />;
-    return <Zap size={26} />;
-  };
+  // 1. Load initial pre-rendered content immediately, then fetch latest from CMS
+  useEffect(() => {
+    getContent().then(setContent);
+
+    fetch(CMS_API)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.settings) {
+          setContent((prev) => (prev ? { ...prev, ...data } : data));
+        }
+      })
+      .catch((err) => console.warn("Live CMS sync fallback:", err));
+  }, []);
+
+  if (!content) {
+    return <div style={{ minHeight: "100vh", background: "#ffffff" }} />;
+  }
+
+  const s = content.settings;
+  const services = content.services || [];
+  const testimonials = content.testimonials || [];
+  const faqs = content.faqs || [];
+  const partners = content.partners || [];
+  const gallery = content.gallery || [];
+  const branches = content.branches || [];
 
   return (
     <>
@@ -41,12 +62,17 @@ export default async function Home() {
           <div className="hero-content">
             <div className="eyebrow">
               <Sparkles size={14} />
-              <span>{s.tagline || "Modern, Gentle & Pain-Free Dental Care"}</span>
+              <span>{s.tagline || "KITENGELA · ROYSAMBU"}</span>
             </div>
 
             <h1>
-              Exceptional Dental Care for Your{" "}
-              <span className="gradient">Confident Smile</span>
+              {s.hero_title ? (
+                s.hero_title
+              ) : (
+                <>
+                  We care for your smile; <span className="gradient">your smile says it all.</span>
+                </>
+              )}
             </h1>
 
             <p className="lead">{s.hero_subtitle}</p>
@@ -56,8 +82,8 @@ export default async function Home() {
                 <Calendar size={18} />
                 <span>Book an Appointment</span>
               </Link>
-              <Link href="/#services" className="btn secondary lg">
-                <span>Explore Treatments</span>
+              <Link href="#branches" className="btn secondary lg">
+                <span>Find a Branch</span>
                 <ArrowRight size={17} />
               </Link>
             </div>
@@ -115,25 +141,23 @@ export default async function Home() {
                 priority
               />
 
-              {/* Floating review card */}
               <div className="floating-card top-right">
                 <div className="floating-card-icon gold">
-                  <Star size={22} fill="currentColor" />
+                  <Star size={16} />
                 </div>
                 <div className="floating-card-text">
-                  <b>{s.hero_stat_rating || "4.9 / 5.0 Rating"}</b>
+                  <b>{s.hero_stat_rating || "5.0 ★ Rating"}</b>
                   <span>{s.hero_stat_reviews || "Over 1,200+ happy smiles"}</span>
                 </div>
               </div>
 
-              {/* Floating reassurance card */}
               <div className="floating-card bottom-left">
-                <div className="floating-card-icon">
-                  <ShieldCheck size={22} />
+                <div className="floating-card-icon teal">
+                  <ShieldCheck size={16} />
                 </div>
                 <div className="floating-card-text">
                   <b>Certified Specialists</b>
-                  <span>{s.hero_badge_reassurance || "KDA & ITI Accredited"}</span>
+                  <span>{s.hero_badge_reassurance || "Kitengela & Roysambu Branches"}</span>
                 </div>
               </div>
             </div>
@@ -141,43 +165,12 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ACCEPTED INSURANCE & PARTNERS */}
-      <section className="partners-section">
-        <div className="wrap">
-          <div className="partners-header">
-            <p>{s.insurance_banner_text || "Direct Cashless Settlement With Leading Insurance Providers"}</p>
-          </div>
-          <div className="partners-grid">
-            {partners.map((p) => (
-              <div key={p.id ?? p.name} className="partner-logo-item" title={p.name}>
-                <Image
-                  src={p.logo_url}
-                  alt={p.name}
-                  width={120}
-                  height={50}
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* WHY CHOOSE DENSMILE (4 PILLARS) */}
-      
-
-      {/* SERVICES SECTION */}
+      {/* DENTAL SERVICES SECTION */}
       <section className="section" id="services">
         <div className="wrap">
           <div className="section-head">
-            <div className="eyebrow">
-              <Sparkles size={14} />
-              <span>{s.services_eyebrow || "Our Dental Specialties"}</span>
-            </div>
-            <h2>{s.services_title || "Comprehensive Dental Care for Every Smile"}</h2>
-            <p className="lead">
-              {s.services_subtitle || "From preventative dental hygiene to complex smile rehabilitation and clear aligners, our doctors use advanced protocols for lasting oral wellness."}
-            </p>
+            <h2>Our Services</h2>
+            <p className="lead">Comprehensive, modern dental treatments tailored for adults and children.</p>
           </div>
 
           <div className="services-grid">
@@ -185,34 +178,26 @@ export default async function Home() {
               <Link key={sv.id} href={`/services/${sv.slug}`} className="service-card">
                 <div className="service-image">
                   <Image
-                    src={sv.image_url || "/img/clinic1.jpg"}
+                    src={sv.image_url || "/img/exam.jpg"}
                     alt={sv.title}
                     width={400}
                     height={220}
                   />
                   <div className="service-icon-floating">
-                    <DentalServiceIcon name={sv.icon || sv.slug} size={24} />
+                    <DentalServiceIcon name={sv.icon} size={22} />
                   </div>
                 </div>
 
-                <div className="service-body">
+                <div className="service-content">
+                  <div className="service-meta">
+                    <span className="price-tag">{sv.price_from}</span>
+                  </div>
                   <h3>{sv.title}</h3>
                   <p>{sv.summary}</p>
 
-                  <div className="service-footer">
-                    <div className="service-price">
-                      <span className="label">Investment</span>
-                      <span>
-                        {sv.price_from
-                          ? `${/^\d|^[A-Z]{3}\s/.test(sv.price_from) ? "From " : ""}${sv.price_from}`
-                          : "Custom Plan"}
-                      </span>
-                    </div>
-
-                    <span className="service-link">
-                      <span>Details</span>
-                      <ArrowRight size={15} />
-                    </span>
+                  <div className="service-link">
+                    <span>Learn More</span>
+                    <ArrowRight size={14} />
                   </div>
                 </div>
               </Link>
@@ -230,7 +215,7 @@ export default async function Home() {
           </div>
 
           <div className="branches-grid">
-            {(branches || []).map((b) => {
+            {branches.map((b) => {
               const waClean = (b.whatsapp || b.phone || "").replace(/\D/g, "");
               const phoneClean = (b.phone || "").replace(/\s/g, "");
 
@@ -355,45 +340,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* TEAM SECTION */}
-      
-
-      {/* TESTIMONIALS */}
+      {/* PATIENT TESTIMONIALS */}
       {testimonials.length > 0 && (
         <section className="section" id="testimonials">
           <div className="wrap">
             <div className="section-head">
-              <div className="eyebrow teal">
-                <Star size={14} fill="currentColor" />
-                <span>Patient Experiences</span>
-              </div>
               <h2>What Our Patients Say</h2>
-              <p className="lead">
-                Real feedback from real individuals and families whose oral health and smiles we have had the privilege to look after.
-              </p>
+              <p className="lead">Honest reviews from patients treated at our Kitengela and Roysambu clinics.</p>
             </div>
 
             <div className="testimonials-grid">
               {testimonials.map((t) => (
                 <div key={t.id} className="testimonial-card">
-                  <div className="stars-row" aria-label={`${t.rating} out of 5 stars`}>
-                    {[...Array(t.rating || 5)].map((_, i) => (
-                      <Star key={i} size={16} fill="currentColor" />
+                  <div className="stars">
+                    {Array.from({ length: t.rating || 5 }).map((_, i) => (
+                      <Star key={i} size={16} fill="var(--gold)" color="var(--gold)" />
                     ))}
                   </div>
                   <p className="testimonial-quote">“{t.quote}”</p>
-                  <div className="testimonial-author">
-                    <div className="author-avatar-placeholder">
-                      {t.author.charAt(0)}
-                    </div>
-                    <div className="author-info">
-                      <b>{t.author}</b>
-                      <span>
-                        <CheckCircle2 size={13} />
-                        Verified Patient
-                      </span>
-                    </div>
-                  </div>
+                  <b className="testimonial-author">{t.author}</b>
                 </div>
               ))}
             </div>
@@ -401,75 +366,46 @@ export default async function Home() {
         </section>
       )}
 
-      {/* FAQ SECTION */}
+      {/* FAQS */}
       {faqs.length > 0 && (
         <section className="section soft" id="faq">
-          <div className="wrap">
+          <div className="wrap" style={{ maxWidth: 860 }}>
             <div className="section-head">
-              <div className="eyebrow">
-                <ShieldCheck size={14} />
-                <span>Frequently Asked Questions</span>
-              </div>
-              <h2>Clear Answers to Common Questions</h2>
-              <p className="lead">
-                Everything you need to know about preparing for your dental appointment, treatment expectations, and insurance coverage.
-              </p>
+              <h2>Frequently Asked Questions</h2>
+              <p className="lead">Clear answers to help you prepare for your consultation.</p>
             </div>
 
-            <div className="faq-wrap">
+            <div className="faqs-list">
               {faqs.map((f) => (
-                <div key={f.id} className="faq-card">
-                  <details>
-                    <summary>
-                      <span>{f.question}</span>
-                      <div className="summary-icon">
-                        <ChevronDown size={16} />
-                      </div>
-                    </summary>
-                    <div className="faq-answer">
-                      <p>{f.answer}</p>
-                    </div>
-                  </details>
-                </div>
+                <details key={f.id} className="faq-item">
+                  <summary className="faq-question">
+                    <span>{f.question}</span>
+                    <ChevronDown size={18} className="faq-chevron" />
+                  </summary>
+                  <p className="faq-answer">{f.answer}</p>
+                </details>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* CALL TO ACTION BANNER */}
+      {/* CTA BANNER */}
       <section className="section">
         <div className="wrap">
           <div className="cta-banner">
             <h2>{s.cta_title || "Ready to Experience Pain-Free Dental Care?"}</h2>
-            <p>
-              {s.cta_subtitle || "Book your comprehensive oral consultation online in seconds, or speak directly with our clinic coordinator to schedule an appointment for you and your family."}
-            </p>
+            <p>{s.cta_subtitle || "Book your appointment at our Kitengela or Roysambu branch online in seconds."}</p>
 
             <div className="cta-banner-actions">
-              <Link href="/book" className="btn lg" style={{ background: "#ffffff", color: "var(--navy)" }}>
+              <Link href="/book" className="btn lg" style={{ background: "#ffffff", color: "var(--primary)", fontWeight: 700 }}>
                 <Calendar size={18} />
-                <span>Book Appointment Online</span>
+                <span>Book an Appointment</span>
               </Link>
-              <a href={`tel:${phoneClean}`} className="btn lg secondary" style={{ background: "transparent", color: "#ffffff", borderColor: "rgba(255,255,255,0.4)" }}>
+              <a href="tel:0790330294" className="btn lg secondary" style={{ borderColor: "#ffffff", color: "#ffffff" }}>
                 <Phone size={18} />
-                <span>Call {s.phone || "+254 712 345 678"}</span>
+                <span>Call Hotline</span>
               </a>
-            </div>
-
-            <div className="cta-banner-badges">
-              <div className="cta-badge">
-                <CheckCircle2 size={16} />
-                <span>Same-Day Emergency Slots</span>
-              </div>
-              <div className="cta-badge">
-                <CheckCircle2 size={16} />
-                <span>Zero Hidden Fees</span>
-              </div>
-              <div className="cta-badge">
-                <CheckCircle2 size={16} />
-                <span>Direct Insurance Claims</span>
-              </div>
             </div>
           </div>
         </div>
