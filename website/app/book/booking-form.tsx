@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CheckCircle2, Calendar, ShieldCheck, ArrowRight, AlertCircle } from "@/components/icons";
 
-const CMS_ENDPOINT = "https://densmile-cms-kohl.vercel.app/api/public/appointments";
+const CMS_ENDPOINT = "https://densmile-cms.netlify.app/api/public/appointments";
 
 export default function BookingForm({
   services,

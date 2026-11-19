@@ -78,7 +78,7 @@ export interface Content {
   branches: Branch[];
 }
 
-export const CMS_URL = process.env.CMS_URL || "https://densmile-cms-kohl.vercel.app";
+export const CMS_URL = process.env.CMS_URL || "https://densmile-cms.netlify.app";
 
 const DEFAULT_CONTENT: Content = {
   settings: {
